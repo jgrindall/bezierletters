@@ -1,0 +1,125 @@
+<!doctype html>
+
+<html>
+
+	<head>
+
+		<script src="opentype.js"></script>
+		<script src="letterConsts.js"></script>
+		<script src="letterHelper.js"></script>
+		<script src="letterData.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/EaselJS/0.8.0/easeljs.min.js"></script>
+		<style>
+			canvas{
+				margin:10px;
+				outline:1px solid #bbbbdd;
+			}
+		</style>
+
+	</head>
+
+
+	<body>
+
+		<canvas width="100" height="100" id="demoCanvas"></canvas>
+
+		<script>
+			var stage = new createjs.Stage("demoCanvas");
+			var circle = new createjs.Shape();
+			circle.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 50);
+			circle.x = 50;
+			circle.y = 50;
+			stage.addChild(circle);
+			var myMask = new createjs.Shape();
+			var g = myMask.graphics;
+			LetterHelper.fillPaths(g, letterData["A"]);
+			circle.mask = myMask;
+			stage.update();
+		</script>
+
+		<script>
+			var letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+			for(var i = 0; i < letters.length;i++){
+				var canvas = document.createElement("canvas");
+				canvas.width = 100;
+				canvas.height = 100;
+				canvas.id = "canvas" + i;
+				document.body.appendChild(canvas);
+			}
+			var sf = 100;
+			var scaleAll = function(commands){
+				var obj = {};
+				var minx = Infinity;
+				var maxx = -Infinity;
+				for(var i = 0; i < commands.length; i++){
+					var cmd = commands[i];
+					if(cmd.x < minx){
+						minx = cmd.x;
+					}
+					if(cmd.x > maxx){
+						maxx = cmd.x;
+					}
+				}
+				var dx = (1 - maxx - minx)/2;
+				for(var i = 0; i < commands.length; i++){
+					var cmd = commands[i];
+					cmd.x += dx;
+					if(cmd.x1){
+						cmd.x1 += dx;
+					}
+				}
+				return obj;
+			};
+			var scale = function(cmd){
+				var obj = {};
+				obj.type = cmd.type;
+				if(cmd.x){
+					obj.x = cmd.x/sf;
+				}
+				if(cmd.y){
+					obj.y = cmd.y/sf;
+				}
+				if(cmd.x1){
+					obj.x1 = cmd.x1/sf;
+				}
+				if(cmd.y1){
+					obj.y1 = cmd.y1/sf;
+				}
+				return obj;
+			};
+			var data = {};
+			opentype.load('fonts/ARLRDBD.ttf', function(err, font) {
+				if (err) {
+					 alert('Font could not be loaded: ' + err);
+				}
+				else {
+					//x, baseline, fontsize
+					var y = 86;
+					var size = 105;
+					for(var i = 0; i < letters.length; i++){
+						var path = font.getPath(letters[i], 0, y, size);
+						var commands = [];
+						for(var j = 0; j < path.commands.length; j++){
+							var c = path.commands[j];
+							commands.push(scale(c));
+						}
+						scaleAll(commands)
+						data[letters[i]] = [commands];
+					}
+				}
+			});
+
+			for(var k = 0; k < letters.length; k++){
+				var data = letterData[letters[k]];
+				var canvas = document.getElementById("canvas" + k);
+				//LetterHelper.draw(canvas, data);
+			}
+
+
+		</script>
+
+	</body>
+
+</html>
+
+
